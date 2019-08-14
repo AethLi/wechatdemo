@@ -9,5 +9,12 @@ import lombok.Data;
  **/
 @Data
 public class WeChatException extends Throwable {
+    public static final int ACCESS_TOKEN_GET_FAIL = 1;
+
     private int type;
+
+    public WeChatException(String message, int type) {
+        super(message);
+        this.type = type;
+    }
 }

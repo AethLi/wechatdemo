@@ -1,7 +1,9 @@
 package cn.aethli.wechatdemo.controller;
 
 import cn.aethli.wechatdemo.utils.EncryptionUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -17,15 +19,19 @@ import java.util.Arrays;
  **/
 @ControllerAdvice
 @RequestMapping(value = "/")
-public class IndexCtrl {
+@Slf4j
+public class WeChatCtrl {
 
     //token
     private final String token = "aethli";
 
     @RequestMapping(value = "/wechat")
     public void wechatCtrl(HttpServletRequest request, HttpServletResponse response,
-                           @RequestParam("signature") String signature, @RequestParam("timestamp") String timestamp,
-                           @RequestParam("nonce") String nonce, @RequestParam("echostr") String echostr) throws IOException {
+                           @RequestParam(value = "signature", required = false) String signature,
+                           @RequestParam(value = "timestamp", required = false) String timestamp,
+                           @RequestParam(value = "nonce", required = false) String nonce,
+                           @RequestParam(value = "echostr", required = false) String echostr,
+                           @RequestBody(required = false) String paramStr) throws IOException {
         String[] paramsStr = {token, timestamp, nonce};
         Arrays.sort(paramsStr);
         StringBuilder builder = new StringBuilder();
@@ -34,10 +40,15 @@ public class IndexCtrl {
         }
         String s = EncryptionUtils.toSHA1(builder.toString());
         if (!s.equals(signature)) {
-            System.out.println("校验失败");
+            log.error("校验失败");
             return;
         }
-        System.out.println("校验成功");
+        if (echostr == null) {
+            echostr = "";
+        }
+        if (paramStr != null) {
+
+        }
         response.getWriter().println(echostr);
     }
 }

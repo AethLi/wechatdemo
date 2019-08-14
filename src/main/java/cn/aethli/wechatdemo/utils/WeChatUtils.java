@@ -1,11 +1,12 @@
 package cn.aethli.wechatdemo.utils;
 
 import cn.aethli.wechatdemo.entity.WeChatAccessToken;
+import cn.aethli.wechatdemo.exception.WeChatException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.lettuce.core.RedisClient;
-import io.lettuce.core.api.StatefulRedisConnection;
-import io.lettuce.core.api.sync.RedisCommands;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.stereotype.Component;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -13,17 +14,20 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @device: Hades
  * @author: Termite
  * @date: 2019-08-12 14:27
  **/
+@Component
 public class WeChatUtils {
 
     private static String tokenUrl = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&";
     private static String menuUrl = "https://api.weixin.qq.com/cgi-bin/menu/create?access_token=";
     private static ObjectMapper objectMapper = new ObjectMapper();
+    private static StringRedisTemplate stringRedisTemplate;
 
     /**
      * 获取token并写入redis
@@ -65,23 +69,24 @@ public class WeChatUtils {
         }
         result = sb.toString();
         WeChatAccessToken token = objectMapper.readValue(result, WeChatAccessToken.class);
-        RedisClient redisClient = RedisClient.create("redis://localhost:6379");
-        StatefulRedisConnection<String, String> connection = redisClient.connect();
-        RedisCommands<String, String> syncCommands = connection.sync();
-        syncCommands.set("accessToken", token.getAccessToken());
-        syncCommands.set("expiresIn", String.valueOf(token.getExpiresIn()));
-        connection.close();
-        redisClient.shutdown();
-        System.out.println("accessToken:" + token.getAccessToken());
-        System.out.println("expiresIn:" + String.valueOf(token.getExpiresIn()));
+        stringRedisTemplate.opsForValue().set("accessToken", token.getAccessToken(), token.getExpiresIn(), TimeUnit.SECONDS);
+        System.out.println(token);
         return token;
     }
 
-    public static void menuUpdate() throws IOException {
+    public static void menuUpdate() throws IOException, WeChatException {
         String menuJsonPath = WeChatUtils.class.getClassLoader().getResource("").getPath();
         menuJsonPath += "/templates/menu.json";
         JsonNode jsonNode = objectMapper.readTree(new File(menuJsonPath));
-        URL url = new URL(menuUrl);
+        String accessToken = stringRedisTemplate.opsForValue().get("accessToken");
+        if (accessToken == null) {
+            accessTokenGet();
+            accessToken = stringRedisTemplate.opsForValue().get("accessToken");
+            if (accessToken == null) {
+                throw new WeChatException("access_token Get fail", WeChatException.ACCESS_TOKEN_GET_FAIL);
+            }
+        }
+        URL url = new URL(menuUrl + accessToken + "&");
         String result;
         BufferedReader reader;
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -108,5 +113,10 @@ public class WeChatUtils {
             reader.close();
             System.out.println(result);
         }
+    }
+
+    @Autowired
+    public void setStringRedisTemplate(StringRedisTemplate stringRedisTemplate) {
+        WeChatUtils.stringRedisTemplate = stringRedisTemplate;
     }
 }
