@@ -30,7 +30,7 @@ public class WeChatUtils {
     private static String tokenUrl = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&";
     private static String menuUrl = "https://api.weixin.qq.com/cgi-bin/menu/create?access_token=";
     private static String temporaryMediaUrl = "https://api.weixin.qq.com/cgi-bin/media/get?access_token=ACCESS_TOKEN&media_id=MEDIA_ID";
-    private static String voice2StringUrl = "http://api.weixin.qq.com/cgi-bin/media/voice/addvoicetorecofortext?access_token=ACCESS_TOKEN&format=FORMAT&voice_id=VOICE_Id&lang=zh_CN";
+    private static String voice2StringUrl = "http://api.weixin.qq.com/cgi-bin/media/voice/addvoicetorecofortext?access_token=ACCESS_TOKEN&format=FORMAT&voice_id=VOICE_ID&lang=zh_CN";
     private static ObjectMapper objectMapper = new ObjectMapper();
     private static StringRedisTemplate stringRedisTemplate;
 
@@ -161,6 +161,7 @@ public class WeChatUtils {
             is.close();
             System.out.println("下载成功");
         }
+
         return filename;
     }
 
@@ -177,7 +178,7 @@ public class WeChatUtils {
         }
         String replacedUrl = voice2StringUrl.replace("ACCESS_TOKEN", accessToken);
         replacedUrl = replacedUrl.replace("VOICE_ID", voiceId);
-        replacedUrl = replacedUrl.replace("FORMAT", fileName.substring(fileName.lastIndexOf(".")));
+        replacedUrl = replacedUrl.replace("FORMAT", fileName.substring(fileName.lastIndexOf(".") + 1));
         URL url = new URL(null, replacedUrl, new Handler());
 
         //获取文件读取流
