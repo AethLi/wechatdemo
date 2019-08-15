@@ -1,7 +1,9 @@
 package cn.aethli.wechatdemo.controller;
 
+import cn.aethli.wechatdemo.service.WeChatService;
 import cn.aethli.wechatdemo.utils.EncryptionUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -9,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.util.Arrays;
 
 /**
@@ -24,6 +25,8 @@ public class WeChatCtrl {
 
     //token
     private final String token = "aethli";
+    @Autowired
+    private WeChatService weChatService;
 
     @RequestMapping(value = "/wechat")
     public void wechatCtrl(HttpServletRequest request, HttpServletResponse response,
@@ -31,7 +34,7 @@ public class WeChatCtrl {
                            @RequestParam(value = "timestamp", required = false) String timestamp,
                            @RequestParam(value = "nonce", required = false) String nonce,
                            @RequestParam(value = "echostr", required = false) String echostr,
-                           @RequestBody(required = false) String paramStr) throws IOException {
+                           @RequestBody(required = false) String paramStr) throws Exception {
         String[] paramsStr = {token, timestamp, nonce};
         Arrays.sort(paramsStr);
         StringBuilder builder = new StringBuilder();
@@ -47,7 +50,7 @@ public class WeChatCtrl {
             echostr = "";
         }
         if (paramStr != null) {
-
+            weChatService.MsgHandle(paramStr);
         }
         response.getWriter().println(echostr);
     }
