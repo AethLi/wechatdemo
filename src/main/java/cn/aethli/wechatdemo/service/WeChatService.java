@@ -1,6 +1,7 @@
 package cn.aethli.wechatdemo.service;
 
 import cn.aethli.wechatdemo.exception.WeChatException;
+import cn.aethli.wechatdemo.utils.FormatUtils;
 import cn.aethli.wechatdemo.utils.WeChatUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlFactory;
@@ -35,8 +36,12 @@ public class WeChatService {
         }
         if ("voice".equals(msg.get("MsgType"))) {
             String fileName = WeChatUtils.getWeChatTemporaryMedia(String.valueOf(msg.get("MediaId")));
-            Thread.sleep(1000);
+            FormatUtils.amr2mp3(fileName);
+            fileName += ".mp3";
             String voiceId = WeChatUtils.voice2String(fileName);
+            Thread.sleep(8000);
+            fileName = WeChatUtils.voice2StringResult(fileName);
+
         }
     }
 }

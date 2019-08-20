@@ -31,6 +31,7 @@ public class WeChatUtils {
     private static String menuUrl = "https://api.weixin.qq.com/cgi-bin/menu/create?access_token=";
     private static String temporaryMediaUrl = "https://api.weixin.qq.com/cgi-bin/media/get?access_token=ACCESS_TOKEN&media_id=MEDIA_ID";
     private static String voice2StringUrl = "http://api.weixin.qq.com/cgi-bin/media/voice/addvoicetorecofortext?access_token=ACCESS_TOKEN&format=FORMAT&voice_id=VOICE_ID&lang=zh_CN";
+    private static String voice2StringResultUrl = "http://api.weixin.qq.com/cgi-bin/media/voice/queryrecoresultfortext?access_token=ACCESS_TOKEN&voice_id=VOICE_ID&lang=zh_CN";
     private static ObjectMapper objectMapper = new ObjectMapper();
     private static StringRedisTemplate stringRedisTemplate;
 
@@ -209,6 +210,42 @@ public class WeChatUtils {
             System.out.println(line);
         }
         return voiceId;
+    }
+
+    public static String voice2StringResult(String voiceId) throws WeChatException, IOException {
+        String result;
+        String accessToken = stringRedisTemplate.opsForValue().get("accessToken");
+        if (accessToken == null) {
+            accessTokenGet();
+            accessToken = stringRedisTemplate.opsForValue().get("accessToken");
+            if (accessToken == null) {
+                throw new WeChatException("access_token Get fail", WeChatException.ACCESS_TOKEN_GET_FAIL);
+            }
+        }
+        String replacedUrl = voice2StringResultUrl.replace("ACCESS_TOKEN", accessToken);
+        replacedUrl = replacedUrl.replace("VOICE_ID", voiceId);
+        URL url = new URL(replacedUrl);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestProperty("content-type", "text/html;charset=utf-8");
+        //设置请求方法
+        conn.setRequestMethod("GET");
+        //设置是否使用cookie
+        conn.setUseCaches(false);
+        //设置超时时间
+        conn.setConnectTimeout(8000);
+        conn.setReadTimeout(8000);
+        // 建立实际的连接
+        conn.connect();
+        // 定义 BufferedReader输入流来读取URL的响应,设置接收格式
+        BufferedReader in = new BufferedReader(new InputStreamReader(
+                conn.getInputStream(), "UTF-8"));
+        String line;
+        StringBuilder sb = new StringBuilder();
+        while ((line = in.readLine()) != null) {
+            sb.append(line);
+        }
+        result = sb.toString();
+        return result;
     }
 
     @Autowired
