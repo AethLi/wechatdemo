@@ -14,25 +14,27 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  **/
 @RestControllerAdvice
 public class GlobalExceptionCtrl {
-    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionCtrl.class);
 
-    /**
-     * 全局所有controller默认异常处理
-     *
-     * @param e
-     * @return
-     */
-    @ExceptionHandler(value = Exception.class)
-    public Object exceptionCatch(Exception e) {
-        logger.info("exceptionCatch");
-        logger.error(e.toString());
-        return new ResponseModel(ResponseModel.STATUS_ERROR, e.getMessage());
-    }
+  private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionCtrl.class);
 
-    @ExceptionHandler(value = WeChatException.class)
-    public Object weChatExceptionCatch(Exception e) {
-        logger.info("weChatExceptionCatch");
-        logger.error(e.toString());
-        return null;
-    }
+  /**
+   * 全局所有controller默认异常处理
+   *
+   * @param e
+   * @return
+   */
+  @ExceptionHandler(value = Exception.class)
+  public Object exceptionCatch(Exception e) {
+    logger.info("exceptionCatch");
+    logger.error(e.toString());
+    e.printStackTrace();
+    return new ResponseModel(ResponseModel.STATUS_ERROR, e.getMessage());
+  }
+
+  @ExceptionHandler(value = WeChatException.class)
+  public Object weChatExceptionCatch(Exception e) {
+    logger.info("weChatExceptionCatch");
+    logger.error(e.toString());
+    return null;
+  }
 }
